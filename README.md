@@ -1,2 +1,2 @@
 # Master's Thesis Project
-Fuzzy Search in the Cloud
+Fuzzy Search on Encrypted Data in the Cloud
