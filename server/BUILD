@@ -6,6 +6,10 @@ py_binary(
     deps = [
         requirement("google-cloud-bigquery"),
         requirement("google-auth"),
-        "//utils:ngrams"
+        requirement("pycrypto"),
+        "//utils:utils",
+    ],
+    data = [
+        "service_account.json"
     ]
 )
