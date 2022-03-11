@@ -1,7 +1,9 @@
+load("@python_deps//:requirements.bzl", "requirement")
 
 py_library(
-    name = "ngrams",
-    srcs = ["ngrams.py"],
+    name = "utils",
+    srcs = ["ngrams.py", "aes.py"],
+    deps = [requirement("pycrypto")],
     visibility = ["//server:__subpackages__"]
 )
 

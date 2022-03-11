@@ -1,2 +1,4 @@
-google-cloud-bigquery==2.33
-google-auth==2.6
+google-cloud-bigquery==2.34.0
+google-auth==2.6.0
+google-cloud-storage==2.1.0
+pycrypto==2.6.1
