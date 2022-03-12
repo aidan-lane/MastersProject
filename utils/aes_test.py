@@ -7,8 +7,6 @@ from os.path import exists
 from utils import aes
 
 class TestAes(unittest.TestCase):
-    """Unittest class for one module"""
-
 
     def test_key_gen(self):
         """ Test AES private key generation
