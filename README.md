@@ -13,3 +13,6 @@ Example program run usage:
 
 ## Web Application Startup
 See `/application` directory for details
+
+## Project Diagram
+![](diagram_v2.png)
