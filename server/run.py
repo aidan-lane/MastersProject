@@ -1,11 +1,11 @@
-import sys
+import os
 import argparse
+import cmd
 
-from google.cloud import bigquery
-from google.cloud import storage
+from google.cloud import bigquery, storage
 from google.oauth2 import service_account
 
-import utils
+from utils import aes, ngrams
 
 
 ##############################
@@ -24,7 +24,14 @@ bq_client = bigquery.Client(credentials=credentials, project=credentials.project
 # Cloud Storage
 storage_client = storage.Client(credentials=credentials, 
     project=credentials.project_id,)
-bucket = "al-enc-files"
+file_bucket_name = "al-enc-files"
+
+
+###################
+# Private AES Key #
+###################
+
+private_key = aes.generate_key()
 
 
 def parse_args():
@@ -33,56 +40,75 @@ def parse_args():
     Returns tuple with ngram size and scheme type
     """
     parser = argparse.ArgumentParser(description="Server parameters")
-    parser.add_argument("--ngrams", type=int, help="Length of each individual ngram. \
+    parser.add_argument("files", type=str, help="Path to folder that contains files that can be uploaded.")
+    parser.add_argument("--ngram_size", type=int, help="Length of each individual ngram. \
         Default is 3", default=3)
-    parser.add_argument("--scheme", type=str, help="What encryption/decryption to use. \
-        Default is AES64", default="AES64")
     args = parser.parse_args()
 
-    return args.ngrams, args.scheme
+    return args.files, args.ngram_size
 
 
-def help_menu(args):
-    print("--------------------------")
-    print("Commands:")
-    for command in commands.keys():
-        print("\"{}\": {}".format(command, commands[command][1]))
-    print("--------------------------")
+class AppShell(cmd.Cmd):
+    prompt = ">>> "
+    intro = "Type help or ? to list commands.\n"
 
+    def __init__(self, abspath, ngrams):
+        super(AppShell, self).__init__()
 
-def upload(args):
-    if len(args) != 2:
-        print("Invalid number of arguments, should be: [file] [keywords]")
-        return
+        self.abspath = abspath
+        self.ngrams = ngrams
 
-    filepath = args[0]
-    keywords = args[1].split(",")
+    def precmd(self, line):
+        return line.lower().strip()
 
-    # Encrypt and upload file
-    utils.aes.generate_key()
+    def do_quit(self, _):
+        "Exits the application"
+        return True
 
+    def do_author(self, _):
+        "Prints author and related information for this project"
+        print("Aidan Lane, lanea3@rpi.edu")
 
-commands = {
-    "quit": (lambda _: sys.exit(0), "Quit the application"),
-    "help": (help_menu, "List of valid commands and their descriptions"),
-    "upload": (upload, "Uploads the given file with comma-deliminated keywords.\n\tExample: upload test.txt k1,k2")
-}
+    def do_upload(self, args):
+        "Uploads the given file in specified absolute 'files' path with co" \
+            "mma-deliminated keywords.\nExample: upload file.txt k1,k2"
+        parser = argparse.ArgumentParser(description="Encrypt and upload file to Google Cloud Storage", 
+            usage="upload file.txt key1,key2")
+        parser.add_argument("file", type=str, help="File to be uploaded to the cloud")
+        parser.add_argument("keywords", type=str, help="Plaintext keywords associated with file")
 
+        try:
+            args = parser.parse_args(args.split(" "))
+        except SystemExit:
+            return
+
+        filename = args.file
+        keywords = args.keywords.split(",")
+
+        # Encrypt file
+        out_path = aes.encrypt_file(private_key, os.path.join(self.abspath, filename))
+
+        # Lookup or create bucket if it doesn't exist
+        file_bucket = storage_client.lookup_bucket(file_bucket_name)
+        if not file_bucket:
+            file_bucket = storage_client.create_bucket(file_bucket_name)
+
+        blob = file_bucket.blob(os.path.basename(out_path))
+        blob.upload_from_filename(out_path)
+
+        # Generate n-grams and send to database
+        
 
 if __name__ == "__main__":
+    # Command line argument parsing
+    abspath, ngram_size = parse_args()
 
-    ngrams, sceheme = parse_args()
-
-    ###########################
-    # User Command Processing #
-    ###########################
-
-    print("Enter command:")
-    command = ""
-    while command != "quit":
-        command, *args = input().lower().split(" ")
-
-        if command in commands:
-            commands[command][0](args)
-        else:
-            print("Unknown command! Type help for a list of available command")
+    # Application command parsing
+    shell = AppShell(abspath, ngram_size)
+    while True:
+        try:
+            print()
+            shell.cmdloop()
+            break
+        except KeyboardInterrupt:
+            pass
