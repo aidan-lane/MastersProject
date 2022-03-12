@@ -2,17 +2,14 @@
 Master Thesis Project 2022
 
 ## Server console setup
-1. Add project associated `service_account.json` secret to project directory.
-2. Build server target with `bazel build //server:run`
-3. Run with `./bazel-bin/server/run [args]`
-    - ngram: Size of ngrams (default 3)
-    - scheme: Encryption scheme to encrypt files and ngrams (AES, Base64)
+1. Add Google Cloud project associated `service_account.json` secret file to project directory.
+2. Build and run server target with `bazel run //server:run -- [file directory] --ngram_size=3`
+    - You must specify a directory
+    - ngram_size is not required and the default is 3
+3. Run all unit tests with `bazel test //server:*`
 
-Example run usage:
-`./bazel-bin/server/run ngram=3 scheme=AES`
-***
+Example program run usage:
+`bazel run //server:run -- $PWD/files --ngrams=4`
+
 ## Web Application Startup
 See `/application` directory for details
-
-
-
