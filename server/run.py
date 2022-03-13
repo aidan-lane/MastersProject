@@ -52,11 +52,11 @@ class AppShell(cmd.Cmd):
     prompt = ">>> "
     intro = "Type help or ? to list commands.\n"
 
-    def __init__(self, abspath, ngrams):
+    def __init__(self, abspath, ngram_size):
         super(AppShell, self).__init__()
 
         self.abspath = abspath
-        self.ngrams = ngrams
+        self.ngram_size = ngram_size
 
     def precmd(self, line):
         return line.lower().strip()
@@ -97,6 +97,8 @@ class AppShell(cmd.Cmd):
         blob.upload_from_filename(out_path)
 
         # Generate n-grams and send to database
+        for keyword in keywords:
+            grams = ngrams.extract_ngrams(keyword, self.ngrams)
         
 
 if __name__ == "__main__":

@@ -2,6 +2,8 @@
 """
 
 import unittest
+import random
+import string
 from os.path import exists
 
 from utils import aes
@@ -19,6 +21,16 @@ class TestAes(unittest.TestCase):
         new_len = 64
         key = aes.generate_key(new_len)
         self.assertTrue(len(key), new_len)
+
+
+    def test_string(self):
+        for _ in range(10):
+            s = "".join(random.choices(string.ascii_lowercase, k=10))
+
+            encoded = aes.encrypt_string(s)
+            decoded = aes.decrypt_string(encoded)
+
+            self.assertEqual(decoded, s)
 
 
     def test_encrypt_file(self):
