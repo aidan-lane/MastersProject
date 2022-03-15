@@ -2,8 +2,11 @@ import os
 import argparse
 import cmd
 
-from google.cloud import bigquery, storage
 from google.oauth2 import service_account
+import psycopg2 as sql
+from psycopg2.extras import execute_values
+from dotenv import load_dotenv
+from google.cloud import storage
 
 from utils import aes, ngrams
 
@@ -18,14 +21,16 @@ credentials = service_account.Credentials.from_service_account_file(
     key_path, scopes=["https://www.googleapis.com/auth/cloud-platform"],
 )
 
-# BigQuery
-bq_client = bigquery.Client(credentials=credentials, project=credentials.project_id,)
-
 # Cloud Storage
 storage_client = storage.Client(credentials=credentials, 
     project=credentials.project_id,)
 file_bucket_name = "al-enc-files"
 
+# Connect to CloudSQL instance
+load_dotenv()
+conn = sql.connect(database=os.getenv("DB_NAME"), user=os.getenv("DB_USER"), 
+    password=os.getenv("DB_PASS"), host=os.getenv("DB_HOST"))
+cursor = conn.cursor()
 
 ###################
 # Private AES Key #
@@ -46,6 +51,19 @@ def parse_args():
     args = parser.parse_args()
 
     return args.files, args.ngram_size
+
+
+def init_db():
+    query = """
+        CREATE TABLE IF NOT EXISTS ngrams (
+            efile TEXT NOT NULL,
+            keynum INTEGER NOT NULL,
+            ngram TEXT NOT NULL,
+            PRIMARY KEY (efile, keynum, ngram)
+        );
+    """
+    cursor.execute(query)
+    conn.commit()
 
 
 class AppShell(cmd.Cmd):
@@ -87,23 +105,48 @@ class AppShell(cmd.Cmd):
 
         # Encrypt file
         out_path = aes.encrypt_file(private_key, os.path.join(self.abspath, filename))
+        # Obscure file name by encoding it
+        encfile = aes.encrypt_string(os.path.basename(filename))
 
         # Lookup or create bucket if it doesn't exist
         file_bucket = storage_client.lookup_bucket(file_bucket_name)
         if not file_bucket:
             file_bucket = storage_client.create_bucket(file_bucket_name)
 
-        blob = file_bucket.blob(os.path.basename(out_path))
+        blob = file_bucket.blob(encfile)
         blob.upload_from_filename(out_path)
 
-        # Generate n-grams and send to database
-        for keyword in keywords:
-            grams = ngrams.extract_ngrams(keyword, self.ngrams)
-        
+        # # Generate n-grams and send to database
+        insert_query = """
+            INSERT INTO ngrams (efile, keynum, ngram) VALUES %s ON CONFLICT DO NOTHING;
+        """
+
+        data = []
+        for i, keyword in enumerate(keywords):
+            for ngram in ngrams.extract_ngrams(keyword, self.ngram_size):
+                data.append((encfile, i, ngram))
+
+        execute_values(cursor, insert_query, data)
+        conn.commit()
+        print("Inserted {} ngrams into ngrams table".format(cursor.rowcount))
+
+    
+    def do_delete_all(self, _):
+        "Deletes all ngrams from the database"
+        delete_query = """
+            DELETE FROM ngrams;
+        """
+        cursor.execute(delete_query)
+        conn.commit()
+        print("Deleted {} rows from ngrams table".format(cursor.rowcount))
+
 
 if __name__ == "__main__":
     # Command line argument parsing
     abspath, ngram_size = parse_args()
+
+    # Intialize Database
+    init_db()
 
     # Application command parsing
     shell = AppShell(abspath, ngram_size)

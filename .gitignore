@@ -2,3 +2,4 @@
 /.vscode
 files/*
 service_account.json
+*.env

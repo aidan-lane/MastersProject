@@ -16,11 +16,11 @@ def generate_key(num_bytes=32):
 
 
 def encrypt_string(string):
-    return base64.encodebytes(bytes(string, encoding)).decode(encoding)
+    return base64.encodebytes(bytes(string, encoding)).hex()
 
 
 def decrypt_string(enc):
-    return base64.decodebytes(enc.encode(encoding)).decode(encoding)
+    return base64.decodebytes(bytes.fromhex(enc)).decode(encoding)
 
 
 def encrypt_file(key, infile_path, outfile_path=None, chunksize=64*1024):

@@ -21,8 +21,20 @@ class TestNgrams(unittest.TestCase):
         """ Test when word is divided into multiple ngrams
         """
         word = "testword"
-        answer = ["test", "estw", "stwo", "twor", "word"]
+        answer = {"test", "estw", "stwo", "twor", "word"}
         grams = ngrams.extract_ngrams(word, 4)
+
+        self.assertTrue(len(grams), len(answer))
+        self.assertSequenceEqual(grams, answer)
+
+
+    def test_ngram_repeat(self):
+        """ Test when there is a duplicate ngram for a given word. 
+            Duplicates should be removed.
+        """
+        word = "ababa"
+        answer = {"aba", "bab"}
+        grams = ngrams.extract_ngrams(word, 3)
 
         self.assertTrue(len(grams), len(answer))
         self.assertSequenceEqual(grams, answer)
