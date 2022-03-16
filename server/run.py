@@ -59,8 +59,19 @@ def init_db():
             efile TEXT NOT NULL,
             keynum INTEGER NOT NULL,
             ngram TEXT NOT NULL,
-            PRIMARY KEY (efile, keynum, ngram)
+            PRIMARY KEY (ngram, keynum, efile)
         );
+
+        CREATE OR REPLACE FUNCTION find_matches(TEXT[], INT) 
+        RETURNS TABLE(file TEXT, score decimal)
+        AS $$ 
+            SELECT n.efile, cast(COUNT(n.ngram) as decimal) / $2 score
+            FROM UNNEST($1) elem 
+            JOIN ngrams n ON n.ngram = elem
+            GROUP BY n.efile, n.keynum
+            SORT BY score DESC
+        $$
+        LANGUAGE SQL;
     """
     cursor.execute(query)
     conn.commit()
