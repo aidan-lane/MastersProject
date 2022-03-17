@@ -36,7 +36,8 @@ cursor = conn.cursor()
 # Private AES Key #
 ###################
 
-private_key = aes.generate_key()
+private_key = aes.gen_rand_bytes(aes.KEY_SIZE)
+iv = aes.gen_rand_bytes(aes.IV_SIZE)
 
 
 def parse_args():
@@ -69,7 +70,7 @@ def init_db():
             FROM UNNEST($1) elem 
             JOIN ngrams n ON n.ngram = elem
             GROUP BY n.efile, n.keynum
-            SORT BY score DESC
+            ORDER BY score DESC
         $$
         LANGUAGE SQL;
     """
@@ -117,7 +118,7 @@ class AppShell(cmd.Cmd):
         # Encrypt file
         out_path = aes.encrypt_file(private_key, os.path.join(self.abspath, filename))
         # Obscure file name by encoding it
-        encfile = aes.encrypt_string(os.path.basename(filename))
+        encfile = aes.encrypt_string(os.path.basename(filename), private_key, iv)
 
         # Lookup or create bucket if it doesn't exist
         file_bucket = storage_client.lookup_bucket(file_bucket_name)
@@ -135,11 +136,12 @@ class AppShell(cmd.Cmd):
         data = []
         for i, keyword in enumerate(keywords):
             for ngram in ngrams.extract_ngrams(keyword, self.ngram_size):
-                data.append((encfile, i, ngram))
+                enc_ngram = aes.encrypt_string(ngram, private_key, iv)
+                data.append((encfile, i, enc_ngram))
 
         execute_values(cursor, insert_query, data)
         conn.commit()
-        print("Inserted {} ngrams into ngrams table".format(cursor.rowcount))
+        print("Inserted {} ngrams into table".format(cursor.rowcount))
 
     
     def do_delete_all(self, _):

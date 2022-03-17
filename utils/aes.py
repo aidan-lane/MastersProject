@@ -1,26 +1,29 @@
 import os
 import struct
 import secrets
-import base64
 
 from Crypto.Cipher import AES
 
-encoding = "utf-8"
+
+encoding = "UTF-8"
+KEY_SIZE = 32
+IV_SIZE = 16
 
 
-def generate_key(num_bytes=32):
-    """ Return a random, cryptographically strong key of size nbytes.
-    Default 32 bytes (256 bits)
+def gen_rand_bytes(num_bytes=32):
+    """ Return a random, cryptographically strong string of length num_bytes
     """
     return secrets.token_hex(num_bytes // 2)
 
 
-def encrypt_string(string):
-    return base64.encodebytes(bytes(string, encoding)).hex()
+def encrypt_string(data, key, iv):
+    cipher = AES.new(key, AES.MODE_CFB, iv)
+    return cipher.encrypt(data.encode(encoding)).hex()
 
 
-def decrypt_string(enc):
-    return base64.decodebytes(bytes.fromhex(enc)).decode(encoding)
+def decrypt_string(data, key, iv):
+    cipher = AES.new(key, AES.MODE_CFB, iv)
+    return cipher.decrypt(bytes.fromhex(data)).decode(encoding)
 
 
 def encrypt_file(key, infile_path, outfile_path=None, chunksize=64*1024):
