@@ -48,12 +48,12 @@
       </v-row>
       <v-virtual-scroll
         :items="files"
-        height="550"
+        height="450"
         bench="5"
         item-height="64"
-        max-height="90%"
         class="list"
         id="vlist"
+        :style="listHeight"
       >
         <template v-slot:default="{ item }">
           <v-list-item :key="item">
@@ -96,21 +96,30 @@
       keyword: "",
       keywords: [],
       selectedFile: "",
-      listHeight: 550,
-      newHeight: 550,
+      listHeight: "max-height: 70%;",
+      rowHeight: 0,
+      pMaxHeight: 70,
       files: ["haha", "hehe", "123", "tdtwtdwdw", "dwdwd", "dwdwwd", "dwdwwd", "hehe", "123", "tdtwtdwdw", "dwdwd", "dwdwwd", "dwdwwd"]
     }),
 
-    mounted () {
-      this.listHeight = document.getElementById("vlist").clientHeight;
+    updated() {
+        let newRowHeight = document.getElementById("keyrow").clientHeight;
+          console.log(newRowHeight, this.rowHeight);
+          if (this.rowHeight - newRowHeight !== 0) {
+            this.pMaxHeight = Math.max(0, this.pMaxHeight - 5);
+            this.listHeight = "max-height: " + this.pMaxHeight + "%;";
+            this.listHeight2 -= 40;
+            console.log(this.listHeight);
+          }
+          this.rowHeight = newRowHeight;
     },
 
     methods: {
       onSubmit: function () {
         if (!this.keywords.includes(this.keyword) && this.keyword.length > 0) {
           this.keywords.push(this.keyword);
-          self.newHeight = "max-height: " + parseFloat((this.listHeight - document.getElementById("keyrow").clientHeight) / this.listHeight * 100).toFixed(2)+"%;";
-          console.log("test",  self.newHeight)
+
+          
         }
         this.keyword = "";
       },
