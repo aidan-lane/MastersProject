@@ -10,7 +10,7 @@
       style="height: 100%; margin-left: 10%; margin-right: 10%;"
     >
       <v-row
-        class="row pt-10"
+        class="row-pad pt-10"
         style="padding-left: 10%; padding-right: 10%;"
       >
         <v-text-field
@@ -34,6 +34,7 @@
       <v-row
         class="mt-0"
         style="padding-left: 10%; padding-right: 10%;"
+        id="keyrow"
       >
         <v-chip 
           v-for="word in keywords" :key="word"
@@ -45,6 +46,44 @@
           {{ word }}
         </v-chip>
       </v-row>
+      <v-virtual-scroll
+        :items="files"
+        height="550"
+        bench="5"
+        item-height="64"
+        max-height="90%"
+        class="list"
+        id="vlist"
+      >
+        <template v-slot:default="{ item }">
+          <v-list-item :key="item">
+            <v-list-item-action>
+              <v-btn
+                fab
+                small
+                depressed
+                color="primary"
+              >
+                {{ item }}
+              </v-btn>
+            </v-list-item-action>
+
+            <v-list-item-content>
+              <v-list-item-title>
+                User Database Record <strong>ID {{ item }}</strong>
+              </v-list-item-title>
+            </v-list-item-content>
+
+            <v-list-item-action>
+              <v-icon small>
+                mdi-open-in-new
+              </v-icon>
+            </v-list-item-action>
+          </v-list-item>
+
+          <v-divider></v-divider>
+        </template>
+      </v-virtual-scroll>
     </v-sheet>
   </v-container>
 </template>
@@ -55,13 +94,24 @@
 
     data: () => ({
       keyword: "",
-      keywords: []
+      keywords: [],
+      selectedFile: "",
+      listHeight: 550,
+      newHeight: 550,
+      files: ["haha", "hehe", "123", "tdtwtdwdw", "dwdwd", "dwdwwd", "dwdwwd", "hehe", "123", "tdtwtdwdw", "dwdwd", "dwdwwd", "dwdwwd"]
     }),
+
+    mounted () {
+      this.listHeight = document.getElementById("vlist").clientHeight;
+    },
 
     methods: {
       onSubmit: function () {
-        if (!this.keywords.includes(this.keyword) && this.keyword.length > 0)
+        if (!this.keywords.includes(this.keyword) && this.keyword.length > 0) {
           this.keywords.push(this.keyword);
+          self.newHeight = "max-height: " + parseFloat((this.listHeight - document.getElementById("keyrow").clientHeight) / this.listHeight * 100).toFixed(2)+"%;";
+          console.log("test",  self.newHeight)
+        }
         this.keyword = "";
       },
       
@@ -77,8 +127,14 @@
     margin-top: 50px;
   }
 
-  .row {
+  .row-pad {
     padding-left: 20%;
     padding-right: 20%;
+  }
+
+  .list {
+    margin-left: 10%;
+    margin-right: 10%;
+    margin-top: 30px;
   }
 </style>
