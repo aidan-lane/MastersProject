@@ -6,7 +6,6 @@ py_binary(
     deps = [
         requirement("google-cloud-storage"),
         requirement("google-auth"),
-        requirement("pycrypto"),
         requirement("psycopg2-binary"),
         requirement("python-dotenv"),
         "//utils:aes",

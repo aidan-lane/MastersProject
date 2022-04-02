@@ -1,5 +1,5 @@
 google-auth==2.6.0
 google-cloud-storage==2.0.0
 python-dotenv==0.19.2
-pycrypto==2.6.1
+pycryptodome==3.14.1
 psycopg2-binary==2.9.3

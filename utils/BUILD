@@ -3,7 +3,7 @@ load("@python_deps//:requirements.bzl", "requirement")
 py_library(
     name = "aes",
     srcs = ["aes.py"],
-    deps = [requirement("pycrypto")],
+    deps = [requirement("pycryptodome")],
     visibility = ["//server:__subpackages__"]
 )
 

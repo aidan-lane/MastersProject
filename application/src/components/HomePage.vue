@@ -48,7 +48,7 @@
       </v-row>
       <v-virtual-scroll
         :items="files"
-        height="450"
+        height="500"
         bench="5"
         item-height="64"
         class="list"
@@ -58,25 +58,18 @@
         <template v-slot:default="{ item }">
           <v-list-item :key="item">
             <v-list-item-action>
-              <v-btn
-                fab
-                small
-                depressed
-                color="primary"
-              >
-                {{ item }}
-              </v-btn>
+              <v-icon>mdi-file-document-outline</v-icon>
             </v-list-item-action>
 
             <v-list-item-content>
               <v-list-item-title>
-                User Database Record <strong>ID {{ item }}</strong>
+                <strong>ID {{ item }}</strong>
               </v-list-item-title>
             </v-list-item-content>
 
             <v-list-item-action>
               <v-icon small>
-                mdi-open-in-new
+                mdi-download
               </v-icon>
             </v-list-item-action>
           </v-list-item>
@@ -99,27 +92,26 @@
       listHeight: "max-height: 70%;",
       rowHeight: 0,
       pMaxHeight: 70,
-      files: ["haha", "hehe", "123", "tdtwtdwdw", "dwdwd", "dwdwwd", "dwdwwd", "hehe", "123", "tdtwtdwdw", "dwdwd", "dwdwwd", "dwdwwd"]
+      files: ["file1", "file2", "file3", "file4", "file5", "file6", "file7", "file8"]
     }),
 
     updated() {
-        let newRowHeight = document.getElementById("keyrow").clientHeight;
-          console.log(newRowHeight, this.rowHeight);
-          if (this.rowHeight - newRowHeight !== 0) {
-            this.pMaxHeight = Math.max(0, this.pMaxHeight - 5);
-            this.listHeight = "max-height: " + this.pMaxHeight + "%;";
-            this.listHeight2 -= 40;
-            console.log(this.listHeight);
-          }
-          this.rowHeight = newRowHeight;
+      let newRowHeight = document.getElementById("keyrow").clientHeight;
+        if (this.rowHeight - newRowHeight < 0) {
+          this.pMaxHeight = Math.max(0, this.pMaxHeight - 5);
+        }
+        else if (this.rowHeight - newRowHeight > 0) {
+          this.pMaxHeight = Math.max(0, this.pMaxHeight + 5);
+        }
+
+        this.listHeight = "max-height: " + this.pMaxHeight + "%;";
+        this.rowHeight = newRowHeight;
     },
 
     methods: {
       onSubmit: function () {
         if (!this.keywords.includes(this.keyword) && this.keyword.length > 0) {
           this.keywords.push(this.keyword);
-
-          
         }
         this.keyword = "";
       },

@@ -2,7 +2,9 @@ import os
 import struct
 import secrets
 
-from Crypto.Cipher import AES
+from Crypto.Cipher import AES, PKCS1_OAEP
+import Crypto.Hash.MD5 as MD5
+from Crypto.PublicKey import RSA
 
 
 encoding = "UTF-8"
@@ -75,3 +77,24 @@ def decrypt_file(key, infile_path, outfile_path, chunksize=24*1024):
 
     return outfile_path
     
+
+def import_key(b):
+    return RSA.importKey(b)
+
+
+def create_hash(ptext):
+    return MD5.new(ptext).digest()
+
+
+def RSA_encrypt(key, msg):
+    """ Encrypts a string message with given RSA key (public or private)
+    """
+    cipher = PKCS1_OAEP.new(key)
+    return cipher.encrypt(msg)
+
+
+def RSA_decrypt(key, msg):
+    """ Decrypts a string message with given RSA key (public or private)
+    """
+    cipher = PKCS1_OAEP.new(key)
+    return cipher.decrypt(msg)

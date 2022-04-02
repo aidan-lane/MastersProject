@@ -3,3 +3,4 @@
 files/*
 service_account.json
 *.env
+__pycache__
