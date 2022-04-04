@@ -12,7 +12,9 @@ Example program run usage:
 `bazel run //server:run -- $PWD/files --ngrams=4`
 
 ## Web Application Startup
-See `/application` directory for details
+1. `cd` into `/application` directory
+2. Start backend with `npm run backend` (Starts flask server and TCP socket connection)
+3. Start frontend with `npm run frontend`
 
 ## Project Diagram
 ![](diagram_v2.png)
