@@ -109,9 +109,18 @@
     },
 
     methods: {
+      getMatches: function() {
+        this.$http.get("/matches")
+          .then(response => response.data)
+          .then(data => {
+            console.log(data);
+          });
+      },
+
       onSubmit: function () {
         if (!this.keywords.includes(this.keyword) && this.keyword.length > 0) {
           this.keywords.push(this.keyword);
+          this.getMatches();
         }
         this.keyword = "";
       },

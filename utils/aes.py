@@ -5,6 +5,8 @@ import secrets
 from Crypto.Cipher import AES, PKCS1_OAEP
 import Crypto.Hash.MD5 as MD5
 from Crypto.PublicKey import RSA
+from Crypto.Hash import SHA384
+from Crypto.Signature import PKCS1_v1_5 as pksig
 
 
 encoding = "UTF-8"
@@ -83,18 +85,23 @@ def import_key(b):
 
 
 def create_hash(ptext):
-    return MD5.new(ptext).digest()
+    mhash = SHA384.new(ptext.encode("utf8"))
+    return mhash
+
+
+def verify_signature(key, hash, sig):
+    return pksig.new(key).verify(hash, sig)
 
 
 def RSA_encrypt(key, msg):
     """ Encrypts a string message with given RSA key (public or private)
     """
     cipher = PKCS1_OAEP.new(key)
-    return cipher.encrypt(msg)
+    return cipher.encrypt(msg.encode(encoding))
 
 
 def RSA_decrypt(key, msg):
     """ Decrypts a string message with given RSA key (public or private)
     """
     cipher = PKCS1_OAEP.new(key)
-    return cipher.decrypt(msg)
+    return cipher.decrypt(msg).decode(encoding)

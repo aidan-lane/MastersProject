@@ -4,13 +4,13 @@ py_library(
     name = "aes",
     srcs = ["aes.py"],
     deps = [requirement("pycryptodome")],
-    visibility = ["//server:__subpackages__"]
+    visibility = ["//visibility:public"]
 )
 
 py_library(
     name = "ngrams",
     srcs = ["ngrams.py"],
-    visibility = ["//server:__subpackages__"]
+    visibility = ["//visibility:public"]
 )
 
 py_test(

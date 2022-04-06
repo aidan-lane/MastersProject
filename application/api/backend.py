@@ -1,4 +1,6 @@
 from flask import Flask
+from flask_cors import CORS
+
 from Crypto.PublicKey import RSA
 
 from session import get_session_key
@@ -9,10 +11,17 @@ from session import get_session_key
 ##########
 
 app = Flask(__name__)
+CORS(app)
 
 @app.route("/")
 def home():
     return "API Entry Point"
+
+
+@app.route("/matches", methods=["GET"])
+def matches():
+    return "test"
+
 
 @app.route("/file")
 def get_file():
@@ -23,4 +32,6 @@ def get_file():
 # Start TCP session key exchange #
 ##################################
 
-get_session_key()
+session_key, iv = get_session_key()
+
+app.run()
