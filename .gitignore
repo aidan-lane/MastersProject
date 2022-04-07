@@ -1,6 +1,7 @@
 /bazel-*
 /.vscode
 files/*
+!files/example.txt
 service_account.json
 *.env
 __pycache__

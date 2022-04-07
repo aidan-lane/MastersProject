@@ -56,14 +56,14 @@
         :style="listHeight"
       >
         <template v-slot:default="{ item }">
-          <v-list-item :key="item">
+          <v-list-item :key="item[1]">
             <v-list-item-action>
               <v-icon>mdi-file-document-outline</v-icon>
             </v-list-item-action>
 
             <v-list-item-content>
               <v-list-item-title>
-                <strong>ID {{ item }}</strong>
+                <strong>ID {{ item[0] }}</strong>
               </v-list-item-title>
             </v-list-item-content>
 
@@ -92,7 +92,7 @@
       listHeight: "max-height: 70%;",
       rowHeight: 0,
       pMaxHeight: 70,
-      files: ["file1", "file2", "file3", "file4", "file5", "file6", "file7", "file8"]
+      files: []
     }),
 
     updated() {
@@ -110,10 +110,15 @@
 
     methods: {
       getMatches: function() {
-        this.$http.get("/matches")
+        this.$http.get("/matches", {
+          params: {
+            keyword: this.keyword,
+            nsize: 3
+          },
+        })
           .then(response => response.data)
           .then(data => {
-            console.log(data);
+            data.files.forEach(file => this.files.push(file))
           });
       },
 
