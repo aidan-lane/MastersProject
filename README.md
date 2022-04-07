@@ -12,7 +12,8 @@ Example program run usage:
 `bazel run //server:run -- $PWD/files --ngrams=4`
 
 ## Web Application Startup
-See `/application` directory for details
+Run backend with `bazel run //application/api:backend`
+Run frontend with `cd application && npm run frontend`
 
 ## Project Diagram
 ![](diagram_v2.png)

@@ -1,6 +1,10 @@
-import os
 import argparse
 import cmd
+import os
+import pickle
+import socket
+import sys
+import threading
 
 from google.oauth2 import service_account
 import psycopg2 as sql
@@ -49,9 +53,11 @@ def parse_args():
     parser.add_argument("files", type=str, help="Path to folder that contains files that can be uploaded.")
     parser.add_argument("--ngram_size", type=int, help="Length of each individual ngram. \
         Default is 3", default=3)
+    parser.add_argument("--port", type=int, help="Port to start server on.", required=False, default=9999)
+    
     args = parser.parse_args()
 
-    return args.files, args.ngram_size
+    return args.files, args.ngram_size, args.port
 
 
 def init_db():
@@ -154,12 +160,47 @@ class AppShell(cmd.Cmd):
         print("Deleted {} rows from ngrams table".format(cursor.rowcount))
 
 
+def start_server(port):
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    sock.bind(("", port))
+
+    # Queue up to 5 requests
+    sock.listen(5)                                           
+
+    while True:
+        client_socket, _ = sock.accept()      
+        msg = client_socket.recv(4096)
+
+        # Make sure client's RSA public key is valid
+        pubkey, signature = pickle.loads(msg)
+        pubkey = aes.import_key(pubkey)
+
+        # Verify signature
+        mhash = aes.create_hash("textbook")
+        if not aes.verify_signature(pubkey, mhash, signature):
+            print("Public key error: Invalid signature")
+            sys.exit(0)
+
+        # Encrypt the AES session key and IV
+        session_key_enc = aes.RSA_encrypt(pubkey, private_key)
+        session_iv_enc = aes.RSA_encrypt(pubkey, iv)
+
+        # Send encrypted key to connected client
+        client_socket.send(pickle.dumps((session_key_enc, session_iv_enc)))
+        client_socket.close()
+
+
 if __name__ == "__main__":
     # Command line argument parsing
-    abspath, ngram_size = parse_args()
+    abspath, ngram_size, port = parse_args()
 
     # Intialize Database
     init_db()
+
+    # Start TCP server on separate thread
+    thread = threading.Thread(target=start_server, args=[port], daemon=True)
+    thread.start()
 
     # Application command parsing
     shell = AppShell(abspath, ngram_size)

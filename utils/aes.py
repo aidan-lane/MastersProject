@@ -2,7 +2,11 @@ import os
 import struct
 import secrets
 
-from Crypto.Cipher import AES
+from Crypto.Cipher import AES, PKCS1_OAEP
+import Crypto.Hash.MD5 as MD5
+from Crypto.PublicKey import RSA
+from Crypto.Hash import SHA384
+from Crypto.Signature import PKCS1_v1_5 as pksig
 
 
 encoding = "UTF-8"
@@ -17,12 +21,12 @@ def gen_rand_bytes(num_bytes=32):
 
 
 def encrypt_string(data, key, iv):
-    cipher = AES.new(key, AES.MODE_CFB, iv)
+    cipher = AES.new(key.encode(encoding), AES.MODE_CFB, iv.encode(encoding))
     return cipher.encrypt(data.encode(encoding)).hex()
 
 
 def decrypt_string(data, key, iv):
-    cipher = AES.new(key, AES.MODE_CFB, iv)
+    cipher = AES.new(key.encode(encoding), AES.MODE_CFB, iv.encode(encoding))
     return cipher.decrypt(bytes.fromhex(data)).decode(encoding)
 
 
@@ -33,7 +37,7 @@ def encrypt_file(key, infile_path, outfile_path=None, chunksize=64*1024):
         outfile_path = infile_path + ".enc"
 
     iv = os.urandom(16)
-    encryptor = AES.new(key, AES.MODE_CBC, iv)
+    encryptor = AES.new(key.encode(encoding), AES.MODE_CBC, iv)
     file_size = os.path.getsize(infile_path)
 
     with open(infile_path, "rb") as infile:
@@ -46,9 +50,12 @@ def encrypt_file(key, infile_path, outfile_path=None, chunksize=64*1024):
                 if len(chunk) == 0:
                     break
                 elif len(chunk) % 16 != 0:
-                    chunk += (" " * (16 - len(chunk) % 16)).encode("utf-8")
+                    chunk += (" " * (16 - len(chunk) % 16)).encode(encoding)
 
                 outfile.write(encryptor.encrypt(chunk))
+
+    infile.close()
+    outfile.close()
 
     return outfile_path
 
@@ -62,7 +69,7 @@ def decrypt_file(key, infile_path, outfile_path, chunksize=24*1024):
     with open(infile_path, "rb") as infile:
         size = struct.unpack('<Q', infile.read(struct.calcsize('Q')))[0]
         iv = infile.read(16)
-        decryptor = AES.new(key, AES.MODE_CBC, iv)
+        decryptor = AES.new(key.encode(encoding), AES.MODE_CBC, iv)
 
         with open(outfile_path, "wb") as outfile:
             while True:
@@ -75,3 +82,29 @@ def decrypt_file(key, infile_path, outfile_path, chunksize=24*1024):
 
     return outfile_path
     
+
+def import_key(b):
+    return RSA.importKey(b)
+
+
+def create_hash(ptext):
+    mhash = SHA384.new(ptext.encode(encoding))
+    return mhash
+
+
+def verify_signature(key, hash, sig):
+    return pksig.new(key).verify(hash, sig)
+
+
+def RSA_encrypt(key, msg):
+    """ Encrypts a string message with given RSA key (public or private)
+    """
+    cipher = PKCS1_OAEP.new(key)
+    return cipher.encrypt(msg.encode(encoding))
+
+
+def RSA_decrypt(key, msg):
+    """ Decrypts a string message with given RSA key (public or private)
+    """
+    cipher = PKCS1_OAEP.new(key)
+    return cipher.decrypt(msg).decode(encoding)

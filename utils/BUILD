@@ -3,14 +3,14 @@ load("@python_deps//:requirements.bzl", "requirement")
 py_library(
     name = "aes",
     srcs = ["aes.py"],
-    deps = [requirement("pycrypto")],
-    visibility = ["//server:__subpackages__"]
+    deps = [requirement("pycryptodome")],
+    visibility = ["//visibility:public"]
 )
 
 py_library(
     name = "ngrams",
     srcs = ["ngrams.py"],
-    visibility = ["//server:__subpackages__"]
+    visibility = ["//visibility:public"]
 )
 
 py_test(
