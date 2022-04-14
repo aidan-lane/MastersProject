@@ -1,6 +1,6 @@
 import os
 
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_file, Response
 from flask_cors import CORS
 from google.oauth2 import service_account
 import psycopg2 as sql
@@ -26,6 +26,7 @@ credentials = service_account.Credentials.from_service_account_file(
 storage_client = storage.Client(credentials=credentials, 
     project=credentials.project_id,)
 file_bucket_name = "al-enc-files"
+bucket = storage_client.bucket(file_bucket_name)
 
 # Connect to CloudSQL instance
 load_dotenv(os.getcwd() + "/server/.env")  # Get relative .env file from server
@@ -69,8 +70,21 @@ def matches():
     return jsonify(files=rows)
 
 
-@app.route("/file")
+@app.route("/file", methods=["GET"])
 def get_file():
-    return ""
+    file_hash = request.args.get("hash")
+    filename = request.args.get("filename")
+
+    blob = bucket.blob(file_hash)
+    blob.download_to_filename(file_hash)
+
+    aes.decrypt_file(session_key, file_hash, filename)
+
+    def generate():
+        with open(filename, "rb") as f:
+            for row in f:
+                yield row 
+
+    return Response(generate())
 
 app.run()

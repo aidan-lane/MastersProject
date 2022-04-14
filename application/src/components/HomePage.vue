@@ -68,9 +68,12 @@
             </v-list-item-content>
 
             <v-list-item-action>
-              <v-icon small>
-                mdi-download
-              </v-icon>
+              <v-btn
+                icon
+                @click="downloadFile(item)"
+              >
+                <v-icon small> mdi-download </v-icon>
+              </v-btn>
             </v-list-item-action>
           </v-list-item>
 
@@ -116,10 +119,11 @@
             nsize: 3
           },
         })
-          .then(response => response.data)
-          .then(data => {
-            data.files.forEach(file => this.files.push(file))
-          });
+        .then(response => response.data)
+        .then(data => {
+          this.files = [];
+          data.files.forEach(file => this.files.push(file));
+        });
       },
 
       onSubmit: function () {
@@ -132,6 +136,28 @@
       
       removeKeyword: function(word) {
         this.keywords = this.keywords.filter(k => k !== word);
+      },
+
+      downloadFile: function(fileData) {
+        let file = fileData[0];
+        let hash = fileData[1];
+
+        this.$http.get("/file", {
+          params: {
+            hash: hash,
+            filename: file
+          },
+        })
+        .then(async response => {
+          var fileURL = window.URL.createObjectURL(new Blob([response.data]));
+          var fileLink = document.createElement('a');
+
+          fileLink.href = fileURL;
+          fileLink.setAttribute('download', file);
+          document.body.appendChild(fileLink);
+
+          fileLink.click();
+        });
       }
     }
   }
